@@ -39,16 +39,16 @@ def calculate_change(drink_cost):
     pennies = int(input("How many pennies?: ")) * 0.01
     total = round(quarters + dimes + nickles + pennies, 2)
     return_value = float(total) - float(drink_cost)
+    
     if drink_cost < total:
       return "{:.2f}".format(round(return_value, 2))
       
     return False
     
-    
-    
 # Handles initial drink question with secret choices
 def drink_question():
     choice = input("What would you like? (espresso/latte/cappuccino): ").lower()
+    
     if (choice == 'off'):
       return False
     
@@ -84,7 +84,7 @@ def report_resources(resources):
       
       print(f"{item.capitalize()}: {formatted_value}")
 
-# Handles adding money to resources and formatting return value
+# Handles adding money to resources
 def process_transaction(drink_cost):
     if 'money' in resources:
       resources['money'] += "{:.2f}".format(round(drink_cost, 2))
@@ -106,9 +106,11 @@ def coffee_machine(MENU, resources):
       drink_ingredients = MENU[choice]['ingredients']
       drink_cost = int(MENU[choice]['cost'])
       
+      #Verify there is enough chosen drink resources
       if verify_resources(drink_ingredients,resources):
         return_value = calculate_change(drink_cost)
         
+        #Verify the drink has been paid in full
         if return_value:
           process_transaction(drink_cost)
           remove_resources(drink_ingredients, resources)
