@@ -30,25 +30,34 @@ resources = {
     "coffee": 100,
 }
 
-def total_payment():
+# Totals up customer payment
+def calculate_change(drink_cost):
     print("Please insert coins.")
     quarters = int(input("How many quarters?: ")) * 0.25
     dimes = int(input("How many dimes?: ")) * 0.10
     nickles = int(input("How many nickles?: ")) * 0.05
     pennies = int(input("How many pennies?: ")) * 0.01
     total = round(quarters + dimes + nickles + pennies, 2)
-
-    return total
+    return_value = float(total) - float(drink_cost)
+    if drink_cost < total:
+      return "{:.2f}".format(round(return_value, 2))
+      
+    return False
     
     
+    
+# Handles initial drink question with secret choices
 def drink_question():
     choice = input("What would you like? (espresso/latte/cappuccino): ").lower()
-    while choice != 'espresso' and choice != 'latte' and choice != 'cappuccino':
+    if (choice == 'off'):
+      return False
+    
+    while choice != 'espresso' and choice != 'latte' and choice != 'cappuccino' and choice != 'report':
       choice = input("Invalid input. What would you like? (espresso/latte/cappuccino): ").lower()
       
     return choice
 
-
+# Verifies enough resources are present to make coffee
 def verify_resources(drink_ingredients, resources):
     for item, value in drink_ingredients.items():
       if (value > resources[item]):
@@ -57,32 +66,56 @@ def verify_resources(drink_ingredients, resources):
     
     return True
 
-  
+# Handles removing resources when coffee is made
 def remove_resources(drink_ingredients, resources):
     for item, value in drink_ingredients.items():
         resources[item] -= drink_ingredients[item]
+
+# Handles reporting remaining resources
+def report_resources(resources):
+    for item, value in resources.items():
+      match item:
+        case 'coffee':
+          formatted_value = str(value) + 'g'
+        case 'money':
+          formatted_value = '$' + str(value)
+        case _:
+          formatted_value = str(value) + 'ml'
       
+      print(f"{item.capitalize()}: {formatted_value}")
 
+# Handles adding money to resources and formatting return value
+def process_transaction(drink_cost):
+    if 'money' in resources:
+      resources['money'] += "{:.2f}".format(round(drink_cost, 2))
+    else:
+      resources['money'] = "{:.2f}".format(round(drink_cost, 2))
+  
+  
 def coffee_machine(MENU, resources):
-  serving = True
+  choice = True
 
-  while serving:
-    choice = drink_question()
-    drink_ingredients = MENU[choice]['ingredients']
-
-    if verify_resources(drink_ingredients,resources):
-      payment = total_payment()
+  while choice:
+    choice = drink_question() 
+    
+    if choice == False:
+      return
+    elif choice == 'report':
+      report_resources(resources)
+    else:
+      drink_ingredients = MENU[choice]['ingredients']
       drink_cost = int(MENU[choice]['cost'])
+      
+      if verify_resources(drink_ingredients,resources):
+        return_value = calculate_change(drink_cost)
+        
+        if return_value:
+          process_transaction(drink_cost)
+          remove_resources(drink_ingredients, resources)
 
-      if (drink_cost < payment):
-        return_value = float(payment) - float(drink_cost)
-        
-        remove_resources(drink_ingredients, resources)
-        
-        rounded_return_value = "{:.2f}".format(round(return_value, 2))
-        print(f"Here is ${rounded_return_value} in change.")
-        print(f"Here is your {choice} ☕️. Enjoy!")
-      else: 
-        print("Sorry that's not enough money. Money refunded.")
+          print(f"Here is ${return_value} in change.")
+          print(f"Here is your {choice} ☕️. Enjoy!")
+        else: 
+          print("Sorry that's not enough money. Money refunded.")
     
 coffee_machine(MENU, resources)
